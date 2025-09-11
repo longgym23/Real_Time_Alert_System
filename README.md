@@ -4,7 +4,7 @@
     </a>
 </h2>
 <h2 align="center">
-    Open Source Software Development
+    Hệ thống cảnh báo thời gian thực
 </h2>
 <div align="center">
     <p align="center">
