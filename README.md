@@ -4,7 +4,7 @@
     </a>
 </h2>
 <h2 align="center">
-    Hệ thống cảnh báo thời gian thực
+    HỆ THỐNG CẢNH BÁO THỜI GIAN THỰC (SERVER GỬI CẢNH BÁO TỚI NHIỀU CLIENT QUA UDP)
 </h2>
 <div align="center">
     <p align="center">
@@ -19,131 +19,204 @@
 
 </div>
 
----
-# 🌦️ Hệ Thống Cảnh Báo Thời Gian Thực (UDP)
 
-## 1. Giới thiệu hệ thống
+## 📖 1. Giới thiệu hệ thống
 
-Đây là một hệ thống cảnh báo thời gian thực hoạt động theo mô hình **Server - Client**.  
-Server sẽ gửi các thông báo/cảnh báo thời tiết tới nhiều Client thông qua giao thức **UDP**.
+Hệ thống cảnh báo thời gian thực sử dụng giao thức UDP cho phép server gửi các cảnh báo thời tiết đến nhiều client theo thời gian thực thông qua cơ chế multicast.
 
-### 🎯 Mục tiêu hệ thống
-- Đảm bảo truyền tải cảnh báo nhanh chóng (gần như tức thì).
-- Hỗ trợ nhiều Client cùng lúc (tối đa **10 client**).
-- Dễ dàng triển khai trong các hệ thống giám sát, IoT, hoặc quản lý tập trung.
+**Server: Thu thập dữ liệu thời tiết từ OpenWeather API, định kỳ gửi các cảnh báo đến một nhóm multicast.**
 
-### 🏗️ Thành phần
-- **Server**:  
-  - Quản lý danh sách client.  
-  - Gửi broadcast thông báo thời tiết (mưa lớn, bão, nắng nóng, v.v.).  
-  - Ghi log lại tất cả cảnh báo đã gửi vào GUI.  
+**Client: Nhận dữ liệu từ nhóm multicast và hiển thị cảnh báo trên giao diện người dùng (GUI).Lưu trữ dữ liệu: Các cảnh báo được lưu vào file văn bản (weather_alerts.log) để theo dõi lịch sử.**  
 
-- **Client**:  
-  - Nhận và hiển thị cảnh báo thời gian thực kèm **timestamp**.  
-  - Ghi log vào file `weather_alerts.log`.  
-  - Phân loại và hiển thị nhiều loại cảnh báo khác nhau.  
+Các chức năng chính:
 
----
+**🖥️ Chức năng của Server:**  
 
-## ⚙️ Chức năng chính
+Thu thập dữ liệu thời tiết: Gọi API OpenWeather để lấy thông tin thời tiết (nhiệt độ, tốc độ gió, lượng mưa, mô tả thời tiết) cho một thành phố cụ thể.  
+Gửi cảnh báo: Sử dụng giao thức UDP multicast để gửi các cảnh báo thời tiết đến tất cả client trong nhóm multicast.  
+Quản lý lịch sử: Ghi lại các cảnh báo vào log (GUI và file).  
+Xử lý lỗi: Xử lý các lỗi liên quan đến API hoặc kết nối mạng, hiển thị thông báo trên GUI.  
+Giao diện người dùng: Cung cấp GUI để nhập tên thành phố, khởi động/dừng server, và hiển thị log cảnh báo.
 
-### 🔹 Server
-- Khởi tạo server UDP trên port **12345** để phát cảnh báo.  
-- GUI (Swing) cho phép gửi thông báo cảnh báo đến tất cả client đã đăng ký.  
-- Hỗ trợ nhiều loại cảnh báo thời tiết:
-  - Mưa lớn 🌧️
-  - Bão 🌀
-  - Nắng nóng ☀️
-  - Sương mù 🌫️
-  - Lốc xoáy 🌪️  
+**💻 Chức năng của Client:**  
 
-### 🔹 Client
-- Kết nối tới Server qua UDP socket và tự động đăng ký.  
-- Nhận và hiển thị cảnh báo thời gian thực trên console với **timestamp**.  
-- Ghi log lịch sử cảnh báo đã nhận vào file `weather_alerts.log`.  
+Kết nối nhóm multicast: Tham gia vào nhóm multicast để nhận dữ liệu từ server.  
+Hiển thị cảnh báo: Nhận và hiển thị thông tin thời tiết (mô tả, nhiệt độ, tốc độ gió, lượng mưa) trên GUI.  
+Giao diện người dùng: Hiển thị các cảnh báo với màu sắc và biểu tượng cảm xúc phù hợp (mưa, bão, nắng nóng, v.v.).  
+Lưu trữ lịch sử: Lưu các cảnh báo vào file weather_alerts.log với dấu thời gian.  
+Quản lý trạng thái: Cho phép dừng client và ngắt kết nối khỏi nhóm multicast.
 
----
+**🌐 Chức năng hệ thống:**  
 
-## 2. Ngôn ngữ & Công nghệ chính
+Giao thức UDP Multicast: Sử dụng DatagramSocket và MulticastSocket để gửi/nhận dữ liệu qua nhóm multicast (239.255.0.1:4446).  
+Dữ liệu JSON: Dữ liệu thời tiết được truyền dưới dạng chuỗi JSON, chứa các thông tin như loại cảnh báo, mô tả, nhiệt độ, tốc độ gió, lượng mưa, vị trí, và thời gian.  
+Lưu trữ file: Các cảnh báo được ghi vào file weather_alerts.log theo định dạng có dấu thời gian.  
+Xử lý lỗi: Hiển thị thông báo lỗi trên GUI và ghi log chi tiết.
 
-- **Ngôn ngữ**: Java (JDK 8+)  
-- **Công nghệ sử dụng**:
-  - `UDP Socket (java.net)` → Giao thức truyền dữ liệu nhanh, không kết nối.  
-  - `Swing (javax.swing)` → Xây dựng GUI cho server.  
-  - `Threading (java.util.concurrent)` → Xử lý bất đồng bộ cho đăng ký và nhận tin.  
-  - `File I/O (java.io)` → Ghi log cảnh báo vào file.  
-  - `SimpleDateFormat (java.text)` → Định dạng timestamp cho thông báo.  
 
----
 
-## 3. Hướng dẫn chạy
 
-### 📌 Yêu cầu
-- **JDK**: Phiên bản 8 trở lên  
-- **Hệ điều hành**: Windows / Linux / macOS  
-- **Công cụ**: IDE (IntelliJ IDEA, Eclipse) hoặc dòng lệnh `javac`  
-- **Mạng**: Các thiết bị cùng mạng LAN (hoặc dùng `localhost` để test)  
+## 🔧 2. Công nghệ sử dụng
 
-### 📂 Cấu trúc dự án
+
+
+
+Các công nghệ được sử dụng để xây dựng hệ thống cảnh báo thời gian thực:  
+
+**Java Core và Multithreading: Sử dụng Timer và Thread để định kỳ gửi cảnh báo và xử lý kết nối mạng.**  
+
+**Java Swing: Xây dựng giao diện người dùng cho cả server và client.**
+
+**Java Sockets (UDP): Sử dụng DatagramSocket và MulticastSocket cho giao thức UDP multicast.**
+
+**File I/O: Ghi lịch sử cảnh báo vào file văn bản (weather_alerts.log).**
+
+**JSON Processing: Sử dụng thư viện org.json để xử lý dữ liệu thời tiết từ API.**
+
+Hỗ trợ:  
+
+**java.net và java.io: Xử lý kết nối mạng và đọc/ghi file.**
+
+**java.text.SimpleDateFormat: Tạo dấu thời gian cho các bản ghi log.**  
+
+**javax.swing.text.html: Hiển thị log với định dạng HTML (màu sắc, biểu tượng).** 
+
+Không sử dụng cơ sở dữ liệu, đảm bảo ứng dụng nhẹ và dễ triển khai.
+
+
+
+
+## 🚀 3. Hình ảnh các chức năng
+
+<p align="center">
+  <img src="images/hinh2.jpg" alt="Ảnh 1" width="800"/>
+</p>
+
+<p align="center">
+  <em> Hình 1: Giao diện Server hiển thị log cảnh báo và nút điều khiển  </em>
+</p>
+
+<p align="center">
+  <img src="images/hinh1.jpg" alt="Ảnh 2" width="700"/>
+</p>
+<p align="center">
+  <em> Hình 2: Giao diện Client hiển thị các cảnh báo thời tiết </em>
+</p>
+
+
+<p align="center">
+  <img src="images/hinh3.jpg" alt="Ảnh 3" width="450"/>
+</p>
+<p align="center">
+  <em> Hình 3: Lịch sử cảnh báo được lưu vào file weather_alerts.log </em>
+</p>
+
+<p align="center">
+  <img src="images/hinh4.jpg" alt="Ảnh 4" width="700"/>
+</p>
+<p align="center">
+  <em> Hình 4: Hiển thị thông báo lỗi khi kết nối API thất bại </em>
+</p>
+
+
+## 📝 4. Hướng dẫn cài đặt và sử dụng
+
+### 🔧 Yêu cầu hệ thống
+
+- **Java Development Kit (JDK)**: Phiên bản 8 trở lên
+- **Hệ điều hành**: Windows, macOS, hoặc Linux
+- **Môi trường phát triển**: IDE (IntelliJ IDEA, Eclipse, VS Code) hoặc terminal/command prompt
+- **Bộ nhớ**: Tối thiểu 512MB RAM
+- **Dung lượng**: Khoảng 10MB cho mã nguồn và file thực thi
+- **Tệp cấu hình**: File config.properties chứa API key và URL của OpenWeather API.
+
+
+
+
+## 📦 Cài đặt và triển khai
+
+#### Bước 1: Chuẩn bị môi trường
+1. **Kiểm tra Java**: Mở terminal/command prompt và chạy:
+   ```bash
+   java -version
+   javac -version
+   ```
+
+Đảm bảo cả hai lệnh đều hiển thị phiên bản Java 8 trở lên.
+
+2. **Tải mã nguồn**: Sao chép thư mục `BTL` chứa các file:
+- `AlertServer.java`
+- `AlertServerGUI.java`
+- `AlertClientGUI.java`
+- `Config.java`
+- `config.properties (cần cấu hình WEATHER_API_KEY và WEATHER_API_URL).`
+
+
+
+Cấu hình file config.properties:
+- `WEATHER_API_KEY=your_openweather_api_key`
+- `WEATHER_API_URL=http://api.openweathermap.org/data/2.5/forecast`
+- `DEFAULT_CITY=Hanoi,vn`
+
+
+#### Bước 2: Biên dịch mã nguồn
+
+1. **Mở terminal** và điều hướng đến thư mục chứa mã nguồn
+2. **Biên dịch các file Java**:
+   ```bash
+   javac Alert/*.java
+   ```
+   Hoặc biên dịch từng file riêng lẻ:
+   ```bash
+   javac Alert/AlertServer.java
+   javac Alert/AlertServerGUI.java
+   javac Alert/AlertClientGUI.java
+   javac Alert/Config.java
+   ```
+
+3. **Kiểm tra kết quả**: Nếu biên dịch thành công, sẽ tạo ra các file `.class` tương ứng.
+
+
+
+#### Bước 3: Chạy ứng dụng
+
+**Khởi động Server:**
+```bash
+java Alert.AlertServerGUI
 ```
-Alert/
-├── AlertClient.java     // Client nhận và log cảnh báo
-├── AlertServer.java     // Server quản lý client và broadcast
-├── AlertServerGUI.java  // GUI cho server
+- Giao diện server sẽ hiển thị.
+- Nhập tên thành phố (ví dụ: Hanoi,vn) và nhấn "Start Server".
+- Server sẽ gửi cảnh báo đến nhóm multicast 239.255.0.1:4446 mỗi 5 phút.
+
+**Khởi động Client:**
+```bash
+java Alert.AlertClientGUI
 ```
 
-### 🚀 Cách chạy chương trình
+- Mở terminal mới cho mỗi client.
+- Client tự động tham gia nhóm multicast và hiển thị các cảnh báo thời tiết.
 
-1. **Biên dịch code**
-   ```bash
-   cd Alert
-   javac *.java
-   ```
+### 🚀 Sử dụng ứng dụng
 
-2. **Chạy Server với GUI**
-   ```bash
-   java Alert.AlertServerGUI
-   ```
-   → GUI xuất hiện để chọn điều kiện thời tiết và gửi cảnh báo.  
+1.**Server:**
 
-3. **Chạy Client**
-   ```bash
-   java Alert.AlertClient
-   ```
-   → Client tự động đăng ký và chờ nhận cảnh báo.  
-   → Nhấn **Enter** để dừng client.  
+- Nhập tên thành phố vào ô nhập liệu.
+- Nhấn "Start Server" để bắt đầu gửi cảnh báo.
+- Nhấn "Stop Server" để dừng.
+- Log cảnh báo được hiển thị trên GUI và lưu vào file weather_alerts.log.
 
-4. **Gửi cảnh báo**
-   - Trên GUI Server: Chọn điều kiện, nhập vị trí → nhấn **Gửi thông báo**.  
-   - Client sẽ hiển thị thông báo kèm timestamp và ghi log.  
 
-5. **Dừng hệ thống**
-   - Đóng GUI để dừng server.  
-   - Nhấn **Enter** trong terminal client để dừng.  
+2.**Client:**
 
-### ⚠️ Lưu ý
-- Luôn chạy **Server trước Client**.  
-- File log `weather_alerts.log` được tạo trong thư mục chạy client.  
-- Nếu chạy trên nhiều máy, thay `localhost` trong `AlertClient.java` bằng **IP Server**.  
-- Kiểm tra **firewall** để mở port `12345`.  
+- Tự động nhận và hiển thị các cảnh báo thời tiết từ server.
+- Nhấn "Stop Client" để ngắt kết nối và thoát.
+- Các cảnh báo được lưu vào file weather_alerts.log.
+
+## 📚 5. Thông tin liên hệ
+Họ tên: Lê Đức Khánh Long.  
+Lớp: CNTT 16-03.  
+Email: khanhlong12c@gmail.com
+
+© 2025 AIoTLab, Faculty of Information Technology, DaiNam University. All rights reserved.
 
 ---
-
-## 🚀 Hướng phát triển
-- Thêm giao diện người dùng (UI) web thay cho desktop.  
-- Cho phép Client phản hồi lại Server (ACK hoặc gửi trạng thái).  
-- Mã hóa dữ liệu cảnh báo để tăng tính bảo mật.  
-- Mở rộng cho môi trường Internet (không chỉ trong LAN).  
-- Hỗ trợ đa nền tảng (Windows, Linux, Android, iOS).  
-- Tích hợp dữ liệu thời tiết thực tế từ API.  
-
----
-
-## 4. Hình ảnh minh họa
-> *(Hình ảnh GUI server và console client sẽ được thêm sau khi test.)*  
-
----
-
-## 📚 5. Các project đã thực hiện dựa trên Platform
-- **Khóa 15**  
-- **Khóa 16 (Coming soon)**  
