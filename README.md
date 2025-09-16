@@ -32,26 +32,26 @@ Các chức năng chính:
 
 **🖥️ Chức năng của Server:**  
 
-Thu thập dữ liệu thời tiết: Gọi API OpenWeather để lấy thông tin thời tiết (nhiệt độ, tốc độ gió, lượng mưa, mô tả thời tiết) cho một thành phố cụ thể.  
-Gửi cảnh báo: Sử dụng giao thức UDP multicast để gửi các cảnh báo thời tiết đến tất cả client trong nhóm multicast.  
-Quản lý lịch sử: Ghi lại các cảnh báo vào log (GUI và file).  
-Xử lý lỗi: Xử lý các lỗi liên quan đến API hoặc kết nối mạng, hiển thị thông báo trên GUI.  
-Giao diện người dùng: Cung cấp GUI để nhập tên thành phố, khởi động/dừng server, và hiển thị log cảnh báo.
+- Thu thập dữ liệu thời tiết: Gọi API OpenWeather để lấy thông tin thời tiết (nhiệt độ, tốc độ gió, lượng mưa, mô tả thời tiết) cho một thành phố cụ thể.  
+- Gửi cảnh báo: Sử dụng giao thức UDP multicast để gửi các cảnh báo thời tiết đến tất cả client trong nhóm multicast.  
+- Quản lý lịch sử: Ghi lại các cảnh báo vào log (GUI và file).  
+- Xử lý lỗi: Xử lý các lỗi liên quan đến API hoặc kết nối mạng, hiển thị thông báo trên GUI.  
+- Giao diện người dùng: Cung cấp GUI để nhập tên thành phố, khởi động/dừng server, và hiển thị log cảnh báo.
 
 **💻 Chức năng của Client:**  
 
-Kết nối nhóm multicast: Tham gia vào nhóm multicast để nhận dữ liệu từ server.  
-Hiển thị cảnh báo: Nhận và hiển thị thông tin thời tiết (mô tả, nhiệt độ, tốc độ gió, lượng mưa) trên GUI.  
-Giao diện người dùng: Hiển thị các cảnh báo với màu sắc và biểu tượng cảm xúc phù hợp (mưa, bão, nắng nóng, v.v.).  
-Lưu trữ lịch sử: Lưu các cảnh báo vào file weather_alerts.log với dấu thời gian.  
-Quản lý trạng thái: Cho phép dừng client và ngắt kết nối khỏi nhóm multicast.
+- Kết nối nhóm multicast: Tham gia vào nhóm multicast để nhận dữ liệu từ server.  
+- Hiển thị cảnh báo: Nhận và hiển thị thông tin thời tiết (mô tả, nhiệt độ, tốc độ gió, lượng mưa) trên GUI.  
+- Giao diện người dùng: Hiển thị các cảnh báo với màu sắc và biểu tượng cảm xúc phù hợp (mưa, bão, nắng nóng, v.v.).  
+- Lưu trữ lịch sử: Lưu các cảnh báo vào file weather_alerts.log với dấu thời gian.  
+- Quản lý trạng thái: Cho phép dừng client và ngắt kết nối khỏi nhóm multicast.
 
 **🌐 Chức năng hệ thống:**  
 
-Giao thức UDP Multicast: Sử dụng DatagramSocket và MulticastSocket để gửi/nhận dữ liệu qua nhóm multicast (239.255.0.1:4446).  
-Dữ liệu JSON: Dữ liệu thời tiết được truyền dưới dạng chuỗi JSON, chứa các thông tin như loại cảnh báo, mô tả, nhiệt độ, tốc độ gió, lượng mưa, vị trí, và thời gian.  
-Lưu trữ file: Các cảnh báo được ghi vào file weather_alerts.log theo định dạng có dấu thời gian.  
-Xử lý lỗi: Hiển thị thông báo lỗi trên GUI và ghi log chi tiết.
+- Giao thức UDP Multicast: Sử dụng DatagramSocket và MulticastSocket để gửi/nhận dữ liệu qua nhóm multicast (239.255.0.1:4446).  
+- Dữ liệu JSON: Dữ liệu thời tiết được truyền dưới dạng chuỗi JSON, chứa các thông tin như loại cảnh báo, mô tả, nhiệt độ, tốc độ gió, lượng mưa, vị trí, và thời gian.  
+- Lưu trữ file: Các cảnh báo được ghi vào file weather_alerts.log theo định dạng có dấu thời gian.  
+- Xử lý lỗi: Hiển thị thông báo lỗi trên GUI và ghi log chi tiết.
 
 
 
