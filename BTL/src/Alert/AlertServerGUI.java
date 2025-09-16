@@ -1,100 +1,168 @@
 package Alert;
 
 import javax.swing.*;
+import javax.swing.text.*;
+import javax.swing.text.html.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Date;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class AlertServerGUI extends JFrame {
     private AlertServer server;
-    private JComboBox<String> weatherConditionCombo;
-    private JTextField locationField;
-    private JTextArea logArea;
-    private JButton sendButton;
-    private final int SERVER_PORT = 12345;
-    private final int MAX_CLIENTS = 10;
-    private final String[] weatherConditions = {
-        "Mưa lớn", "Bão", "Nắng nóng", "Sương mù", "Lốc xoáy"
-    };
+    private JTextField cityField;
+    private JTextPane logPane;
+    private JButton startButton;
+    private JButton stopButton;
+    private Thread serverThread;
 
     public AlertServerGUI() {
-        super("Weather Alert Server");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 400);
-        setLocationRelativeTo(null);
-
+        super("Weather Alert Server (OpenWeather API)");
         try {
-            server = new AlertServer(SERVER_PORT, MAX_CLIENTS);
-            server.startRegistration();
+            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi khởi động máy chủ: " + e.getMessage());
-            System.exit(1);
+            System.err.println("Cannot set Nimbus Look and Feel: " + e.getMessage());
         }
 
-        // Initialize components
-        weatherConditionCombo = new JComboBox<>(weatherConditions);
-        locationField = new JTextField(15);
-        sendButton = new JButton("Gửi thông báo thời tiết");
-        logArea = new JTextArea(15, 30);
-        logArea.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(logArea);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(600, 450);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout(10, 10));
 
-        // Layout
-        JPanel inputPanel = new JPanel(new GridLayout(2, 2, 5, 5));
-        inputPanel.add(new JLabel("Điều kiện thời tiết:"));
-        inputPanel.add(weatherConditionCombo);
-        inputPanel.add(new JLabel("Vị trí:"));
-        inputPanel.add(locationField);
+        // Input panel
+        JPanel inputPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+        inputPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        inputPanel.setBackground(new Color(240, 240, 240));
+        inputPanel.add(new JLabel("City (e.g., Hanoi,vn):"));
+        cityField = new JTextField(20);
+        cityField.setFont(new Font("Arial", Font.PLAIN, 14));
+        inputPanel.add(cityField);
 
+        // Button panel
         JPanel buttonPanel = new JPanel();
-        buttonPanel.add(sendButton);
+        buttonPanel.setBackground(new Color(240, 240, 240));
+        startButton = new JButton("Start Server");
+        stopButton = new JButton("Stop Server");
+        startButton.setFont(new Font("Arial", Font.BOLD, 14));
+        stopButton.setFont(new Font("Arial", Font.BOLD, 14));
+        stopButton.setEnabled(false);
+        buttonPanel.add(startButton);
+        buttonPanel.add(stopButton);
 
-        setLayout(new BorderLayout());
+        // Log area
+        logPane = new JTextPane();
+        logPane.setEditable(false);
+        logPane.setFont(new Font("Arial", Font.PLAIN, 14));
+        logPane.setContentType("text/html");
+        logPane.setText("<html><body style='font-family: Arial; font-size: 14px;'></body></html>");
+        JScrollPane scrollPane = new JScrollPane(logPane);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Alert Log"));
+
         add(inputPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
 
         // Event listeners
-        sendButton.addActionListener(e -> sendWeatherAlert());
-        locationField.addActionListener(e -> sendWeatherAlert());
+        startButton.addActionListener(e -> startServer());
+        stopButton.addActionListener(e -> stopServer());
+    }
 
-        // Window close listener
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                server.stop();
+    private void startServer() {
+        String city = cityField.getText().trim();
+        if (city.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập City!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String apiKey = Config.get("WEATHER_API_KEY");
+        if (apiKey == null || apiKey.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "API Key không tồn tại trong config.properties!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        serverThread = new Thread(() -> {
+            try {
+                server = new AlertServer(city, this);
+                server.start();
+            } catch (Exception ex) {
+                log("Lỗi khởi động server: 🌡️ " + ex.getMessage(), "error");
             }
         });
+        serverThread.start();
 
-        log("Máy chủ cảnh báo thời tiết đã khởi động trên cổng " + SERVER_PORT);
+        log("Server khởi động cho 🌍 " + city, "info");
+        startButton.setEnabled(false);
+        stopButton.setEnabled(true);
     }
 
-    private void sendWeatherAlert() {
-        String condition = (String) weatherConditionCombo.getSelectedItem();
-        String location = locationField.getText().trim();
-        if (location.isEmpty()) {
-            location = "Unknown Location";
-        }
-
-        // Thêm thời gian thực vào thông điệp
-        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a z, EEEE, MMMM dd, yyyy");
-        String timestamp = sdf.format(new Date());
-        String message = String.format("%s at %s [%s]! Hãy thực hiện các biện pháp phòng ngừa cần thiết.", 
-            condition, location, timestamp);
-        
+    private void stopServer() {
         try {
-            server.broadcastAlert(message);
-            log("Broadcasted weather alert: " + message);
-            locationField.setText("");
-        } catch (Exception ex) {
-            log("Error sending weather alert: " + ex.getMessage());
+            if (serverThread != null) {
+                serverThread.interrupt();
+            }
+            log("Server dừng ⏹️", "info");
+        } catch (Exception e) {
+            log("Lỗi dừng server: 🌡️ " + e.getMessage(), "error");
         }
+        startButton.setEnabled(true);
+        stopButton.setEnabled(false);
     }
 
-    private void log(String message) {
-        logArea.append(message + "\n");
-        logArea.setCaretPosition(logArea.getDocument().getLength());
+    public void log(String message, String type) {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(() -> log(message, type));
+            return;
+        }
+
+        String timestamp = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(new Date());
+        String color;
+        String icon;
+
+        switch (type.toLowerCase()) {
+            case "rain":
+                color = "#0000FF"; // Xanh dương
+                icon = "🌧️";
+                break;
+            case "storm":
+                color = "#800080"; // Tím
+                icon = "⛈️";
+                break;
+            case "heat":
+                color = "#FF0000"; // Đỏ
+                icon = "☀️";
+                break;
+            case "wind":
+                color = "#00FFFF"; // Cyan
+                icon = "🌬️";
+                break;
+            case "clear":
+                color = "#FFA500"; // Vàng cam
+                icon = "🌤️";
+                break;
+            case "error":
+                color = "#FF0000"; // Đỏ cho lỗi
+                icon = "❌";
+                break;
+            default:
+                color = "#000000"; // Đen cho info
+                icon = "";
+                break;
+        }
+
+        String htmlMessage = String.format(
+            "<div style='color:%s'>[%s] %s %s</div>",
+            color, timestamp, icon, message
+        );
+
+        HTMLDocument doc = (HTMLDocument) logPane.getDocument();
+        try {
+            HTMLEditorKit kit = new HTMLEditorKit();
+            kit.insertHTML(doc, doc.getLength(), htmlMessage, 0, 0, null);
+            logPane.setCaretPosition(doc.getLength()); // Cuộn xuống cuối
+        } catch (BadLocationException | IOException e) {
+            System.err.println("Error appending to log: " + e.getMessage());
+        }
     }
 
     public static void main(String[] args) {
