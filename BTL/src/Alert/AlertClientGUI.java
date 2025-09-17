@@ -86,7 +86,7 @@ public class AlertClientGUI extends JFrame {
                 while (running.get()) {
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     socket.receive(packet);
-                    String received = new String(packet.getData(), 0, packet.getLength());
+                    String received = new String(packet.getData(), 0, packet.getLength(), java.nio.charset.StandardCharsets.UTF_8);
                     JSONObject json = new JSONObject(received);
                     String type = json.getString("type");
                     String desc = json.getString("description");
