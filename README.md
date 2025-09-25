@@ -89,7 +89,7 @@ Không sử dụng cơ sở dữ liệu, đảm bảo ứng dụng nhẹ và d�
 ## 🚀 3. Hình ảnh các chức năng
 
 <p align="center">
-  <img src="images/hinh2.jpg" alt="Ảnh 1" width="800"/>
+  <img src="images/hinh5.jpg" alt="Ảnh 1" width="800"/>
 </p>
 
 <p align="center">
@@ -97,7 +97,7 @@ Không sử dụng cơ sở dữ liệu, đảm bảo ứng dụng nhẹ và d�
 </p>
 
 <p align="center">
-  <img src="images/hinh5.jpg" alt="Ảnh 2" width="700"/>
+  <img src="images/hinh6.jpg" alt="Ảnh 2" width="700"/>
 </p>
 <p align="center">
   <em> Hình 2: Giao diện các Client hiển thị các cảnh báo thời tiết </em>
@@ -105,7 +105,7 @@ Không sử dụng cơ sở dữ liệu, đảm bảo ứng dụng nhẹ và d�
 
 
 <p align="center">
-  <img src="images/hinh6.jpg" alt="Ảnh 3" width="450"/>
+  <img src="images/hinh3.jpg" alt="Ảnh 3" width="450"/>
 </p>
 <p align="center">
   <em> Hình 3: Lịch sử cảnh báo được lưu vào file weather_alerts.log </em>
