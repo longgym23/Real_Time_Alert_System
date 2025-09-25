@@ -16,18 +16,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.json.JSONObject;
 
-public class AlertClientGUI extends JFrame {
+public class AlertClientGUI3 extends JFrame {
     private MulticastSocket socket;
     private InetAddress group;
-    private int port;
+    private int port = 4448; // Cổng khác cho client 3
     private AtomicBoolean running;
     private PrintWriter logWriter;
     private JTextPane logPane;
     private JButton stopButton;
     private TrayIcon trayIcon;
 
-    public AlertClientGUI(String groupAddress, int port) {
-        super("Ứng dụng Khách Cảnh báo Thời tiết (OpenWeather API)");
+    public AlertClientGUI3() {
+        super("Ứng dụng Khách Cảnh báo Thời tiết 3 (OpenWeather API)");
         try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         } catch (Exception e) {
@@ -35,13 +35,12 @@ public class AlertClientGUI extends JFrame {
         }
 
         this.group = null;
-        this.port = port;
         this.running = new AtomicBoolean(true);
 
         // Khởi tạo log file
         try {
-            logWriter = new PrintWriter(new FileWriter("weather_alerts.log", true));
-            System.out.println("Tệp log weather_alerts.log đã mở thành công.");
+            logWriter = new PrintWriter(new FileWriter("weather_alerts3.log", true));
+            System.out.println("Tệp log weather_alerts3.log đã mở thành công.");
         } catch (IOException e) {
             System.err.println("Lỗi khi mở tệp log: " + e.getMessage());
             JOptionPane.showMessageDialog(this, "Không thể mở tệp log: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -51,7 +50,7 @@ public class AlertClientGUI extends JFrame {
         if (SystemTray.isSupported()) {
             SystemTray tray = SystemTray.getSystemTray();
             Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
-            trayIcon = new TrayIcon(image, "Ứng dụng Khách Cảnh báo Thời tiết");
+            trayIcon = new TrayIcon(image, "Ứng dụng Khách Cảnh báo Thời tiết 3");
             trayIcon.setImageAutoSize(true);
             try {
                 tray.add(trayIcon);
@@ -95,10 +94,10 @@ public class AlertClientGUI extends JFrame {
         // Khởi động thread nhận dữ liệu
         new Thread(() -> {
             try {
-                group = InetAddress.getByName(groupAddress);
+                group = InetAddress.getByName("239.255.0.1");
                 socket = new MulticastSocket(port);
                 socket.joinGroup(group);
-                logToGui("Kết nối đến 🌐 " + groupAddress + ":" + port, "info");
+                logToGui("Kết nối đến 🌐 239.255.0.1:" + port, "info");
 
                 byte[] buffer = new byte[1024];
                 while (running.get()) {
@@ -191,15 +190,9 @@ public class AlertClientGUI extends JFrame {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        String groupAddress = (args.length > 0) ? args[0] : "239.255.0.1";
-        int port = (args.length > 1) ? Integer.parseInt(args[1]) : 4446;
-        if (args.length < 2) {
-            System.out.println("Cảnh báo: Sử dụng giá trị mặc định - group: 239.255.0.1, port: 4446. " +
-                             "Cú pháp chính xác: java Alert.AlertClientGUI <groupAddress> <port>");
-        }
+    public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            new AlertClientGUI(groupAddress, port).setVisible(true);
+            new AlertClientGUI3().setVisible(true);
         });
     }
 }
