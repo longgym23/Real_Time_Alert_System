@@ -93,14 +93,14 @@ Không sử dụng cơ sở dữ liệu, đảm bảo ứng dụng nhẹ và d�
 </p>
 
 <p align="center">
-  <em> Hình 1: Giao diện Server hiển thị log cảnh báo và nút điều khiển  </em>
+  <em> Hình 5: Giao diện Server hiển thị log cảnh báo và nút điều khiển  </em>
 </p>
 
 <p align="center">
   <img src="images/hinh1.jpg" alt="Ảnh 2" width="700"/>
 </p>
 <p align="center">
-  <em> Hình 2: Giao diện Client hiển thị các cảnh báo thời tiết </em>
+  <em> Hình 6: Giao diện các Client hiển thị các cảnh báo thời tiết </em>
 </p>
 
 
@@ -148,6 +148,8 @@ Không sử dụng cơ sở dữ liệu, đảm bảo ứng dụng nhẹ và d�
 - `AlertServer.java`
 - `AlertServerGUI.java`
 - `AlertClientGUI.java`
+- `AlertClientGUI2.java`
+- `AlertClientGUI3.java`
 - `Config.java`
 - `config.properties (cần cấu hình WEATHER_API_KEY và WEATHER_API_URL).`
 
@@ -171,6 +173,8 @@ Cấu hình file config.properties:
    javac Alert/AlertServer.java
    javac Alert/AlertServerGUI.java
    javac Alert/AlertClientGUI.java
+   javac Alert/AlertClientGUI2.java
+   javac Alert/AlertClientGUI3.java
    javac Alert/Config.java
    ```
 
@@ -191,6 +195,8 @@ java Alert.AlertServerGUI
 **Khởi động Client:**
 ```bash
 java Alert.AlertClientGUI
+java Alert.AlertClientGUI2
+java Alert.AlertClientGUI3
 ```
 
 - Mở terminal mới cho mỗi client.
@@ -201,16 +207,20 @@ java Alert.AlertClientGUI
 1.**Server:**
 
 - Nhập tên thành phố vào ô nhập liệu.
-- Nhấn "Start Server" để bắt đầu gửi cảnh báo.
-- Nhấn "Stop Server" để dừng.
+- Chọn loại cảnh báo, mức độ nghiêm trọng, khoảng thời gian, nội dung tùy chỉnh.
+- Nhấn "Khởi động Server" để bắt đầu gửi cảnh báo.
+- Nhấn "Gửi Cảnh báo Thủ công" để gửi thủ công đến cổng được chọn.
+- Nhấn "Gửi đến Tất cả Client" để gửi đến tất cả client cùng lúc.
+- Nhấn "Dừng Server" để dừng.
 - Log cảnh báo được hiển thị trên GUI và lưu vào file weather_alerts.log.
+- Lịch sử gửi cảnh báo được hiển thị trong vùng "Lịch sử Gửi Cảnh báo".
 
 
 2.**Client:**
 
 - Tự động nhận và hiển thị các cảnh báo thời tiết từ server.
-- Nhấn "Stop Client" để ngắt kết nối và thoát.
-- Các cảnh báo được lưu vào file weather_alerts.log.
+- Nhấn "Dừng ứng dụng" để ngắt kết nối và thoát.
+- Các cảnh báo được lưu vào file weather_alerts.log (hoặc weather_alerts2.log, weather_alerts3.log cho client khác).
 
 ## 📚 5. Thông tin liên hệ
 Họ tên: Lê Đức Khánh Long.  
