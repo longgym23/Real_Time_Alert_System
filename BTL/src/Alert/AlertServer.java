@@ -1,3 +1,4 @@
+
 package Alert;
 
 import java.net.*;
@@ -7,7 +8,6 @@ import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.nio.charset.StandardCharsets;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -23,6 +23,7 @@ public class AlertServer {
     private long interval;
     private Timer timer;
     private int defaultPort;
+    private MongoDBManager mongoDBManager;
 
     public AlertServer(String city, AlertServerGUI gui, String selectedType, String selectedSeverity, String customMessage, long interval, int port) {
         this.apiKey = Config.get("WEATHER_API_KEY");
@@ -34,6 +35,7 @@ public class AlertServer {
         this.customMessage = customMessage;
         this.interval = interval;
         this.defaultPort = port;
+        this.mongoDBManager = new MongoDBManager();
         if (gui != null) {
             gui.log("Server khởi động cho 🌍 " + city + " (Type: " + selectedType + ", Severity: " + selectedSeverity + ", Interval: " + interval + "ms, Port: " + port + ")", "info");
         }
@@ -54,10 +56,15 @@ public class AlertServer {
                         DatagramPacket packet = new DatagramPacket(data, data.length, group, defaultPort);
                         socket.send(packet);
                         if (gui != null) {
+                            JSONObject json = new JSONObject(alertJson);
+                            String message = formatAlertMessage(alertJson);
+                            String type = json.getString("type");
+                            String severity = json.getString("severity");
                             gui.log("Alert gửi đến 🌐 " + MULTICAST_GROUP + ":" + defaultPort + " 📡", "info");
-                            gui.addToHistory("Gửi lúc " + new SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(new Date()) + ": " + formatAlertMessage(alertJson));
+                            gui.addToHistory(message, type, severity); // Sửa đổi để truyền 3 tham số
                             gui.setLastApiData(alertJson);
                         }
+                        saveAlertToMongoDB(alertJson);
                     } else {
                         if (gui != null) {
                             gui.log("Không có dữ liệu alert 🌫️", "error");
@@ -80,6 +87,9 @@ public class AlertServer {
     public void stop() {
         if (timer != null) {
             timer.cancel();
+        }
+        if (mongoDBManager != null) {
+            mongoDBManager.close();
         }
         if (gui != null) {
             gui.log("Server dừng ⏹️", "info");
@@ -108,9 +118,13 @@ public class AlertServer {
             socket.close();
 
             if (gui != null) {
+                String message = formatAlertMessage(alert.toString());
+                String type = alert.getString("type");
                 gui.log("Manual alert gửi đến 🌐 " + MULTICAST_GROUP + ":" + port, "info");
-                gui.addToHistory("Gửi thủ công lúc " + new SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(new Date()) + ": " + formatAlertMessage(alert.toString()));
+                gui.addToHistory(message, type, severity); // Sửa đổi để truyền 3 tham số
+                gui.setLastApiData(alert.toString());
             }
+            saveAlertToMongoDB(alert.toString());
         } catch (Exception e) {
             if (gui != null) {
                 gui.log("Lỗi gửi manual alert: 🌡️ " + e.getMessage(), "error");
@@ -136,9 +150,13 @@ public class AlertServer {
             socket.close();
 
             if (gui != null) {
+                String message = formatAlertMessage(alert.toString());
+                String type = alert.getString("type");
                 gui.log("Manual alert with last data gửi đến 🌐 " + MULTICAST_GROUP + ":" + port, "info");
-                gui.addToHistory("Gửi thủ công với dữ liệu cũ lúc " + new SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(new Date()) + ": " + formatAlertMessage(alert.toString()));
+                gui.addToHistory(message, type, severity); // Sửa đổi để truyền 3 tham số
+                gui.setLastApiData(alert.toString());
             }
+            saveAlertToMongoDB(alert.toString());
         } catch (Exception e) {
             if (gui != null) {
                 gui.log("Lỗi gửi manual alert with last data: 🌡️ " + e.getMessage(), "error");
@@ -148,19 +166,19 @@ public class AlertServer {
     }
 
     public void sendManualAlertToAllPorts(String messageSource, String alertType, String severity) {
-        int[] ports = {4446, 4447, 4448}; // Danh sách tất cả cổng của client
+        int[] ports = {4446, 4447, 4448};
         try {
             DatagramSocket socket = new DatagramSocket();
             InetAddress group = InetAddress.getByName(MULTICAST_GROUP);
 
             JSONObject alert;
-            if (messageSource.startsWith("{")) { // Kiểm tra nếu là JSON (lastApiData)
+            if (messageSource.startsWith("{")) {
                 alert = new JSONObject(messageSource);
                 alert.put("time", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
                 alert.put("description", customMessage.isEmpty() ? alert.getString("description") : customMessage);
                 alert.put("type", alertType.equals("Auto") ? alert.getString("type") : alertType.toLowerCase());
                 alert.put("severity", severity.toLowerCase());
-            } else { // Trường hợp manualMessage
+            } else {
                 alert = new JSONObject();
                 alert.put("type", alertType.equals("Auto") ? "manual" : alertType.toLowerCase());
                 alert.put("description", messageSource.isEmpty() ? customMessage : messageSource);
@@ -184,14 +202,35 @@ public class AlertServer {
                 String logMessage = messageSource.startsWith("{") 
                     ? "Manual alert with last data gửi đến tất cả client (các cổng 4446, 4447, 4448)" 
                     : "Manual alert gửi đến tất cả client (các cổng 4446, 4447, 4448)";
+                String message = formatAlertMessage(alert.toString());
+                String type = alert.getString("type");
                 gui.log(logMessage, "info");
-                gui.addToHistory("Gửi thủ công đến tất cả lúc " + new SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(new Date()) + ": " + formatAlertMessage(alert.toString()));
+                gui.addToHistory(message, type, severity); // Sửa đổi để truyền 3 tham số
+                gui.setLastApiData(alert.toString());
             }
+            saveAlertToMongoDB(alert.toString());
         } catch (Exception e) {
             if (gui != null) {
                 gui.log("Lỗi gửi manual alert đến tất cả: 🌡️ " + e.getMessage(), "error");
             }
             e.printStackTrace();
+        }
+    }
+
+    private void saveAlertToMongoDB(String alertJson) {
+        try {
+            JSONObject json = new JSONObject(alertJson);
+            String message = formatAlertMessage(alertJson);
+            String type = json.getString("type");
+            String severity = json.getString("severity");
+            String timestamp = json.getString("time");
+            if (mongoDBManager != null) {
+                mongoDBManager.saveAlert(message, type, severity, timestamp);
+            }
+        } catch (Exception e) {
+            if (gui != null) {
+                gui.log("Lỗi lưu alert vào MongoDB: 🌡️ " + e.getMessage(), "error");
+            }
         }
     }
 
@@ -231,7 +270,7 @@ public class AlertServer {
             String desc = weather.getString("description") + (customMessage.isEmpty() ? "" : " - " + customMessage);
 
             String type = selectedType.equals("Auto") ? "info" : selectedType.toLowerCase();
-            String icon = "ℹ️";
+            String icon = "";
             String severity = selectedSeverity.toLowerCase();
 
             if (selectedType.equals("Auto")) {
@@ -320,7 +359,9 @@ public class AlertServer {
             String message = String.format("%s tại %s 🌡️ %.1f°C, 🌬️ %.1f m/s, 💧 %.1f mm (Severity: %s)", desc, location, temp, wind, rain, severity);
             if (gui != null) {
                 gui.log(message, type);
+                gui.addToHistory(message, type, severity); // Sửa đổi để truyền 3 tham số
             }
+            saveAlertToMongoDB(jsonStr);
         } catch (Exception e) {
             if (gui != null) {
                 gui.log("Lỗi log alert: 🌡️ " + e.getMessage(), "error");

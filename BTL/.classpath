@@ -7,6 +7,11 @@
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="resources"/>
-	<classpathentry kind="lib" path="D:/BTLNETWORK/BTL/src/json-20240303.jar"/>
+	<classpathentry kind="lib" path="src/bson-4.10.2.jar"/>
+	<classpathentry kind="lib" path="src/mongodb-driver-core-4.10.2.jar"/>
+	<classpathentry kind="lib" path="src/mongodb-driver-sync-4.10.2.jar"/>
+	<classpathentry kind="lib" path="src/json-20240303.jar"/>
+	<classpathentry kind="lib" path="src/jfreechart-1.5.4.jar"/>
+	<classpathentry kind="lib" path="src/jcommon-1.0.24.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
