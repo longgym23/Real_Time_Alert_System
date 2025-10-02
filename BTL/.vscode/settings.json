@@ -1,0 +1,11 @@
+{
+    "java.debug.settings.onBuildFailureProceed": true,
+    "java.project.sourcePaths": ["src"],
+    "java.project.outputPath": "bin",
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "icons/**/*.png"  // Để VS Code nhận icons
+    ],
+    "java.compile.nullAnalysis.mode": "automatic",
+    "files.encoding": "utf8"  // Hỗ trợ tiếng Việt
+}
